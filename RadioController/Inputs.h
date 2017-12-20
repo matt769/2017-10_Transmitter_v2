@@ -38,16 +38,16 @@ int AY_CENTRE = 554;
 int AY_MIN = 174;
 int AY_MAX = 830;
 int BX_CENTRE = 520;
-int BX_MIN = 821;
-int BX_MAX = 132;
+int BX_MIN = 880;
+int BX_MAX = 140;
 int BY_CENTRE = 498;
 int BY_MIN = 163;
-int BY_MAX = 803;
+int BY_MAX = 825;
 
 const int OUTPUT_MIN = 0;
 const int OUTPUT_MAX = 255;
 
-const int STICK_DEADBAND = 10; // applied to the analog read
+const int STICK_DEADBAND = 5; // applied to the analog read
 
 
 

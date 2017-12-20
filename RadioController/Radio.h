@@ -71,7 +71,6 @@ void parseAcknowledgement(){
     byte mask = 224;
     batteryLevel = (ack & mask) >> 5;
   }
-
 }
 
 byte calculateCheckSum(){

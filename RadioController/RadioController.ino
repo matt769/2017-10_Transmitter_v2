@@ -51,7 +51,7 @@ void loop() {
     }
 
     if (millis() - lastTransmission > txFreq) {
-//            printInputs();
+            printInputs();
 //            printPackage();
 //      Serial.println("Sending...");
       sendPackage();
