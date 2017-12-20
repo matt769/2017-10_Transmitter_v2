@@ -7,14 +7,14 @@
 #include <SPI.h>
 #include "RF24.h"
 
-byte addresses[][6] = {"1Node", "2Node"};
-bool radioNumber = 1;
+static byte address[] = "1Node";
+static byte pipeNumber = 1;
+static bool radioNumber = 1;
 
 // Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(9, 10); // CE and CSN
 
 struct dataStruct {
-  //  unsigned long micro; // might not be part of package but just including anyway
   int throttle; // number 0 to 1000
   int roll;    // number 0 to 1000
   int pitch;     // number 0 to 1000
@@ -27,7 +27,7 @@ struct dataStruct {
 byte statusForAck = 0;
 bool rxHeartbeat = false;
 unsigned long lastRxReceived = 0;
-unsigned long heartbeatTimeout = 500;
+static unsigned long heartbeatTimeout = 1000;
 
 void setup() {
   Serial.begin(115200);
@@ -41,6 +41,15 @@ void loop() {
   }
 } // Loop
 
+void setupRadio() {
+  radio.begin();
+  radio.setPALevel(RF24_PA_HIGH);  // MIN, LOW, HIGH, MAX
+  radio.enableAckPayload();
+  radio.enableDynamicPayloads();
+  radio.setDataRate(RF24_250KBPS); // RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps
+  radio.openReadingPipe(pipeNumber, address);
+  radio.startListening();
+}
 
 // modify to return information as required
 void updateAckStatusForTx() {
@@ -49,34 +58,9 @@ void updateAckStatusForTx() {
   statusForAck = inc;
 }
 
-
-void setupRadio() {
-  // RADIO
-  radio.begin();
-  radio.setPALevel(RF24_PA_HIGH);  // MIN, LOW, HIGH, MAX
-  radio.enableAckPayload();
-  radio.enableDynamicPayloads();
-  // RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps, or RF24_2MBPS for 2Mbps // slower is more reliable and gives longer range
-  radio.setDataRate(RF24_250KBPS);
-  //   * @param delay How long to wait between each retry, in multiples of 250us,
-  //   * max is 15.  0 means 250us, 15 means 4000us.
-  //   * @param count How many retries before giving up, max 15
-  //  radio.setRetries();   // default is setRetries(5,15) // note restrictions due to ack payload
-
-  // Open a writing and reading pipe on each radio, MUST BE OPPOSITE addresses to the receiver
-  if (radioNumber) {
-    radio.openWritingPipe(addresses[1]);
-    radio.openReadingPipe(1, addresses[0]);
-  } else {
-    radio.openWritingPipe(addresses[0]);
-    radio.openReadingPipe(1, addresses[1]);
-  }
-  radio.startListening();
-  //  Serial.println(radio.isChipConnected());
-}
-
-
 byte calculateCheckSum() {
+  // note that some of these are not bytes so not a complete check
+  // TO DO - UPDATE
   byte sum = 0;
   sum += rcPackage.throttle;
   sum += rcPackage.pitch;
@@ -100,7 +84,6 @@ bool checkRadioForInput() {
       Serial.println(F("Failed checksum"));
       return false;
     }
-    //    Serial.println(statusForAck);
     lastRxReceived = millis();
     radio.flush_rx(); // probably remove
     updateAckStatusForTx(); // for next time
@@ -111,7 +94,6 @@ bool checkRadioForInput() {
 
 bool checkHeartbeat() {
   if (millis() - lastRxReceived > heartbeatTimeout) {
-    //    Serial.println(F("Lost connection"));
     rxHeartbeat = false;
   }
   else {
