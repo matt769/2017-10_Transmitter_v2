@@ -1,10 +1,7 @@
 // OUTPUTS
 const byte pinLedGreen = 2;
+const byte pinLedYellow = 3;
 const byte pinLedRed = 4;
-
-bool blinkGreenOn = false;
-bool blinkYellowOn = false;
-bool blinkRedOn = false;
 
 struct led {
   byte pin;
@@ -15,20 +12,13 @@ struct led {
   unsigned long timeOn;
   unsigned long timeOff;
 };
-led yellow = {3, false, 0, 0, 0, 0, 0}; // battery indicator
-
-
-// LEDs
+led yellow = {pinLedYellow, false, 0, 0, 0, 0, 0}; // battery indicator
 
 void setupOutputs() {
-  // set up outputs
   pinMode(pinLedGreen, OUTPUT);
   pinMode(pinLedRed, OUTPUT);
   digitalWrite(pinLedGreen, LOW);
   digitalWrite(pinLedRed, LOW);
-  blinkGreenOn = true;
-
-
   pinMode(yellow.pin, OUTPUT);
   digitalWrite(yellow.pin, yellow.state);
   yellow.active = true;
@@ -90,7 +80,6 @@ void updateLED(led* colour) {
     }
   }
 }
-
 
 void updateOutputs() {
   if (controllerState == TRANSMIT) {

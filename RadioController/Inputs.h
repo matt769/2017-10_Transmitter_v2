@@ -1,11 +1,8 @@
 // INPUTS
 const byte pinJoystickAx = A4;
 const byte pinJoystickAy = A5;
-//const byte pinJoystickAb = ;
 const byte pinJoystickBx = A2;
 const byte pinJoystickBy = A3;
-//const byte pinJoystickBb = ;
-//const byte pinButtonC = 3;    // push button
 const byte pinSwitchD = 8;    // right toggle switch up
 const byte pinSwitchE = 7;    // right toggle switch down
 const byte pinSwitchF = 5;    // left toggle
@@ -26,11 +23,7 @@ byte switchF;
 byte switchGTmp;
 byte switchG;
 
-
-
-
 // STICK CALIBRATION
-
 int AX_CENTRE = 522;
 int AX_MIN = 184;
 int AX_MAX = 870;
@@ -46,27 +39,24 @@ int BY_MAX = 825;
 
 const int OUTPUT_MIN = 0;
 const int OUTPUT_MAX = 255;
-
 const int STICK_DEADBAND = 5; // applied to the analog read
 
-
+byte switchDPrevious = 0;  // DEFAULT LOW
+byte switchEPrevious = 0;  // DEFAULT LOW
+byte switchFPrevious = 0;  // DEFAULT LOW
+byte switchGPrevious = 0;  // DEFAULT LOW
 
 void setupInputs() {
   // set up user inputs (buttons, joysticks etc)
   pinMode(pinJoystickAx, INPUT); // not strictly required
   pinMode(pinJoystickAy, INPUT); // not strictly required
-//  pinMode(pinJoystickAb, INPUT_PULLUP);
   pinMode(pinJoystickBx, INPUT); // not strictly required
   pinMode(pinJoystickBy, INPUT); // not strictly required
-//  pinMode(pinJoystickBb, INPUT_PULLUP);
-//  pinMode(pinButtonC, INPUT_PULLUP);
   pinMode(pinSwitchD, INPUT_PULLUP);
   pinMode(pinSwitchE, INPUT_PULLUP);
   pinMode(pinSwitchF, INPUT_PULLUP);
   pinMode(pinSwitchG, INPUT_PULLUP);
 }
-
-
 
 void readInputs() {
   delay(10);
@@ -74,36 +64,25 @@ void readInputs() {
   delay(10);
   joystickAy = analogRead(pinJoystickAy);
   delay(10);
-//  switchETmp = digitalRead(pinJoystickAb);
-//  delay(10);
   joystickBx = analogRead(pinJoystickBx);
   delay(10);
   joystickBy = analogRead(pinJoystickBy);
   delay(10);
-//  switchFTmp = digitalRead(pinJoystickBb);
-//  delay(10);
   switchDTmp = digitalRead(pinSwitchD);
   switchETmp = digitalRead(pinSwitchE);
   switchFTmp = digitalRead(pinSwitchF);
   switchGTmp = digitalRead(pinSwitchG);
 }
 
-unsigned long switchDLastDebounceTime = 0;
-unsigned long switchELastDebounceTime = 0;
-unsigned long switchFLastDebounceTime = 0;
-unsigned long switchGLastDebounceTime = 0;
-byte switchDPrevious = 0;  // DEFAULT LOW
-byte switchEPrevious = 0;  // DEFAULT LOW
-byte switchFPrevious = 0;  // DEFAULT LOW
-byte switchGPrevious = 0;  // DEFAULT LOW
-
-
-
 
 void debounceInputs() {
   static unsigned long debounceDelay = 50;
-  unsigned long currentTime;
-  currentTime = millis();
+  static unsigned long switchDLastDebounceTime = 0;
+  static unsigned long switchELastDebounceTime = 0;
+  static unsigned long switchFLastDebounceTime = 0;
+  static unsigned long switchGLastDebounceTime = 0;
+  unsigned long currentTime = millis();
+  
   if (switchETmp != switchFPrevious) {
     switchELastDebounceTime = currentTime;
   }
@@ -198,26 +177,11 @@ void mapInputs() {
   joystickAy = map(joystickAy, AY_MIN, AY_MAX, OUTPUT_MIN, OUTPUT_MAX);
   joystickBx = map(joystickBx, BX_MIN, BX_MAX, OUTPUT_MIN, OUTPUT_MAX);
   joystickBy = map(joystickBy, BY_MIN, BY_MAX, OUTPUT_MIN, OUTPUT_MAX);
-//  joystickBb = !switchFPrevious;
   switchD = !switchDPrevious;
   switchE = !switchEPrevious;
   switchF = !switchFPrevious;
   switchG = !switchGPrevious;
 }
-
-
-void printInputs() {
-  Serial.print(joystickAx); Serial.print('\t');
-  Serial.print(joystickAy); Serial.print('\t');
-  Serial.print(joystickBx); Serial.print('\t');
-  Serial.print(joystickBy); Serial.print('\t');
-  Serial.print(switchD); Serial.print('\t');
-  Serial.print(switchE); Serial.print('\t');
-  Serial.print(switchF); Serial.print('\t');
-  Serial.print(switchG); Serial.print('\n');
-}
-
-
 
 int findCentre(byte pin) {
   int centre;
@@ -230,10 +194,6 @@ int findCentre(byte pin) {
   return centre;
 }
 
-
-
-
-
 int findInputMax(byte pin, int centreReading) {
   int dir;
   int maxDiff = 0;
@@ -241,8 +201,6 @@ int findInputMax(byte pin, int centreReading) {
   // wait until reading changes from centre (beyond some threshold)
   while (abs(analogRead(pin) - centreReading) < 100) {
     // wait until input difference exceeds initial value
-    //Serial.print(analogRead(pin));Serial.print('\t');Serial.println(centreReading);
-    //    Serial.println("1");
   }
   // check which way stick has been moved
   if (analogRead(pin) - centreReading > 0) {
@@ -255,15 +213,10 @@ int findInputMax(byte pin, int centreReading) {
   Serial.print("dir: "); Serial.println(dir);
   // now look for the maximum value stick is at until reading is back close to initial value
   while (abs(analogRead(pin) - centreReading) > 50) {
-    //    Serial.print(analogRead(pin));Serial.print('\t');Serial.print(centreReading);
     maxDiff = max(maxDiff, abs(analogRead(pin) - centreReading));
-    //    Serial.print('\t');Serial.println(maxDiff);
-    //    Serial.println("2");
   }
-
   maxReading = centreReading + (maxDiff * dir);
   return maxReading;
-
 }
 
 
@@ -287,13 +240,9 @@ void modifyInputRange(int *centre, int *minimum, int *maximum) {
   // constrain
   *minimum = *centre - (sign(*centre - *minimum) * minRange);
   *maximum = *centre - (sign(*centre - *maximum) * minRange);
-
 }
 
-
-
 void calibration() {
-
   Serial.println(F("StickA X axis"));
   AX_CENTRE = findCentre(pinJoystickAx);
 //  Serial.println(AX_CENTRE);
@@ -347,26 +296,16 @@ void calibration() {
 
 
 void processInputs() {
-//  Serial.print("xxx");
   readInputs();
 //  printInputs();
-//  Serial.print(joystickAx);Serial.print('\t');
   debounceInputs();
-//  Serial.print(joystickAx);Serial.print('\t');
   constrainInputsAll(); // DON'T REALLY NEED THIS NOW (I THINK)
-//  Serial.print(joystickAx);Serial.print('\t');
   mapInputs();
-//  Serial.println(joystickAx);
-//  Serial.print("yyy");
-//  Serial.print(joystickAy); Serial.print('\t');
   addDeadband();
   enforceLimits(); // just in case
-//  Serial.println(joystickAy);
-
 }
 
-
-
+// TO DO - store/retrieve settings in EEPROM
 void writeIntegerToEeprom(int address, int data){
   EEPROM.write(address,highByte(data));
   address++;
@@ -380,36 +319,14 @@ int readIntegerFromEeprom(int address){
   return result;
 }
 
-
-//void writeCalibrationToEeprom() {
-//
-//int address = 0;
-//  
-//AX_CENTRE;
-//AX_MIN;
-//AX_MAX;
-//AY_CENTRE;
-//AY_MIN;
-//AY_MAX;
-//BX_CENTRE;
-//BX_MIN;
-//BX_MAX;
-//BY_CENTRE;
-//BY_MIN;
-//BY_MAX;
-//}
-//
-//void readCalibrationFromEeprom() {
-//
-//}
-
-// have some way of telling if settings are obviously not there?
-
-
-
-
-
-
-
-
+void printInputs() {
+  Serial.print(joystickAx); Serial.print('\t');
+  Serial.print(joystickAy); Serial.print('\t');
+  Serial.print(joystickBx); Serial.print('\t');
+  Serial.print(joystickBy); Serial.print('\t');
+  Serial.print(switchD); Serial.print('\t');
+  Serial.print(switchE); Serial.print('\t');
+  Serial.print(switchF); Serial.print('\t');
+  Serial.print(switchG); Serial.print('\n');
+}
 
