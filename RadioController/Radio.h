@@ -23,7 +23,6 @@
 
 // RADIO
 const byte address[] = "1Node";
-const bool radioNumber = 0; // receiver should be 1 (or anythin not 0)
 RF24 radio(9, 10); // CE, CSN (SPI SS)
 
 struct dataStruct {
