@@ -26,10 +26,10 @@ const byte address[] = "1Node";
 RF24 radio(9, 10); // CE, CSN (SPI SS)
 
 struct dataStruct {
-  int inputOne; // number 0 to 1000
-  int inputTwo;     // number 0 to 1000
-  int inputThree;    // number 0 to 1000
-  int inputFour;     // number 0 to 1000
+  byte inputOne;
+  byte inputTwo;
+  byte inputThree;
+  byte inputFour;
   byte control; // for some control bits
   byte alive; //this will increment every time the data is sent
   byte checksum;

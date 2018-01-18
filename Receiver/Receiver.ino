@@ -7,18 +7,17 @@
 #include <SPI.h>
 #include "RF24.h"
 
-static byte address[] = "1Node";
-static byte pipeNumber = 1;
-static bool radioNumber = 1;
+const byte address[] = "1Node";
+const byte pipeNumber = 1;
 
 // Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(9, 10); // CE and CSN
 
 struct dataStruct {
-  int throttle; // number 0 to 1000
-  int roll;    // number 0 to 1000
-  int pitch;     // number 0 to 1000
-  int yaw;     // number 0 to 1000
+  byte throttle;
+  byte roll;
+  byte pitch;
+  byte yaw;
   byte control; // for some control bits
   byte alive;
   byte checksum;
